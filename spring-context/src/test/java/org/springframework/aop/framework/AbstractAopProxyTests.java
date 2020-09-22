@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,9 +22,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.rmi.MarshalException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -246,7 +246,7 @@ public abstract class AbstractAopProxyTests {
 		assertThat(cta.getCalls()).isEqualTo(1);
 
 		// Will throw exception if it fails
-		Person p2 = (Person) SerializationTestUtils.serializeAndDeserialize(p);
+		Person p2 = SerializationTestUtils.serializeAndDeserialize(p);
 		assertThat(p2).isNotSameAs(p);
 		assertThat(p2.getName()).isEqualTo(p.getName());
 		assertThat(p2.getAge()).isEqualTo(p.getAge());
@@ -765,7 +765,7 @@ public abstract class AbstractAopProxyTests {
 		@SuppressWarnings("serial")
 		class MyDi extends DelegatingIntroductionInterceptor implements TimeStamped {
 			/**
-			 * @see org.springframework.core.testfixture.util.TimeStamped#getTimeStamp()
+			 * @see org.springframework.core.testfixture.TimeStamped#getTimeStamp()
 			 */
 			@Override
 			public long getTimeStamp() {
@@ -1128,7 +1128,7 @@ public abstract class AbstractAopProxyTests {
 		};
 
 		class NameSaver implements MethodInterceptor {
-			private List<Object> names = new LinkedList<>();
+			private List<Object> names = new ArrayList<>();
 
 			@Override
 			public Object invoke(MethodInvocation mi) throws Throwable {

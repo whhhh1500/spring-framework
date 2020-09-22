@@ -33,6 +33,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.Part;
 
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -42,10 +43,12 @@ import org.springframework.http.HttpRange;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.server.PathContainer;
+import org.springframework.http.server.RequestPath;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.util.ServletRequestPathUtils;
 import org.springframework.web.util.UriBuilder;
 
 /**
@@ -91,14 +94,24 @@ public interface ServerRequest {
 	 * Get the request path.
 	 */
 	default String path() {
-		return uri().getRawPath();
+		return requestPath().pathWithinApplication().value();
 	}
 
 	/**
 	 * Get the request path as a {@code PathContainer}.
+	 * @deprecated as of 5.3, in favor on {@link #requestPath()}
 	 */
+	@Deprecated
 	default PathContainer pathContainer() {
-		return PathContainer.parsePath(path());
+		return requestPath();
+	}
+
+	/**
+	 * Get the request path as a {@code PathContainer}.
+	 * @since 5.3
+	 */
+	default RequestPath requestPath() {
+		return ServletRequestPathUtils.getParsedRequestPath(servletRequest());
 	}
 
 	/**
@@ -185,6 +198,17 @@ public interface ServerRequest {
 	 * @see HttpServletRequest#getParameterMap()
 	 */
 	MultiValueMap<String, String> params();
+
+	/**
+	 * Get the parts of a multipart request, provided the Content-Type is
+	 * {@code "multipart/form-data"}, or an exception otherwise.
+	 * @return the multipart data, mapping from name to part(s)
+	 * @throws IOException           if an I/O error occurred during the retrieval
+	 * @throws ServletException      if this request is not of type {@code "multipart/form-data"}
+	 * @since 5.3
+	 * @see HttpServletRequest#getParts()
+	 */
+	MultiValueMap<String, Part> multipartData() throws IOException, ServletException;
 
 	/**
 	 * Get the path variable with the given name, if present.

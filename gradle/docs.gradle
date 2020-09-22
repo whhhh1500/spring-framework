@@ -3,7 +3,7 @@ configurations {
 }
 
 dependencies {
-	asciidoctorExt("io.spring.asciidoctor:spring-asciidoctor-extensions-block-switch:0.4.0.RELEASE")
+	asciidoctorExt("io.spring.asciidoctor:spring-asciidoctor-extensions-block-switch:0.4.2.RELEASE")
 }
 
 repositories {
@@ -110,7 +110,7 @@ dokka {
 }
 
 task downloadResources(type: Download) {
-	def version = "0.2.1.RELEASE"
+	def version = "0.2.2.RELEASE"
 	src "https://repo.spring.io/release/io/spring/docresources/" +
 			"spring-doc-resources/$version/spring-doc-resources-${version}.zip"
 	dest project.file("$buildDir/docs/spring-doc-resources.zip")
@@ -130,29 +130,6 @@ asciidoctorj {
 		}
 	}
 	fatalWarnings ".*"
-}
-
-/**
- * Produce the Spring Framework Reference documentation
- * from "src/docs/asciidoc" into  "build/asciidoc/html5"
- */
-asciidoctor {
-	baseDirFollowsSourceDir()
-	configurations 'asciidoctorExt'
-	sources {
-		include '*.adoc'
-	}
-	outputDir "$buildDir/docs/ref-docs/"
-	resources {
-		from(sourceDir) {
-			include 'images/*', 'css/**', 'js/**'
-		}
-		from extractDocResources
-	}
-	logDocuments = true
-	outputOptions {
-		backends = ["html5", "pdf"]
-	}
 	options doctype: 'book', eruby: 'erubis'
 	attributes([
 			icons: 'font',
@@ -164,11 +141,46 @@ asciidoctor {
 			sectnums: '',
 			'source-highlighter': 'highlight.js',
 			highlightjsdir: 'js/highlight',
-			'highlightjs-theme': 'github', // 'googlecode',
+			'highlightjs-theme': 'googlecode',
 			stylesdir: 'css/',
 			stylesheet: 'stylesheet.css',
 			'spring-version': project.version
 	])
+}
+
+/**
+ * Generate the Spring Framework Reference documentation from "src/docs/asciidoc"
+ * in "build/docs/ref-docs/html5".
+ */
+asciidoctor {
+	dependsOn asciidoctorPdf
+	baseDirFollowsSourceDir()
+	configurations 'asciidoctorExt'
+	sources {
+		include '*.adoc'
+	}
+	outputDir "$buildDir/docs/ref-docs/html5"
+	logDocuments = true
+	resources {
+		from(sourceDir) {
+			include 'images/*.png', 'css/**', 'js/**'
+		}
+		from extractDocResources
+	}
+}
+
+/**
+ * Generate the Spring Framework Reference documentation from "src/docs/asciidoc"
+ * in "build/docs/ref-docs/pdf".
+ */
+asciidoctorPdf {
+	baseDirFollowsSourceDir()
+	configurations 'asciidoctorExt'
+	sources {
+		include '*.adoc'
+	}
+	outputDir "$buildDir/docs/ref-docs/pdf"
+	logDocuments = true
 }
 
 /**
@@ -188,10 +200,10 @@ task docsZip(type: Zip, dependsOn: ['api', 'asciidoctor', 'dokka']) {
 		into "javadoc-api"
 	}
 	from ("$asciidoctor.outputDir/html5") {
-		into "spring-framework-reference"
+		into "reference/html"
 	}
 	from ("$asciidoctor.outputDir/pdf") {
-		into "spring-framework-reference/pdf"
+		into "reference/pdf"
 	}
 	from (dokka) {
 		into "kdoc-api"
